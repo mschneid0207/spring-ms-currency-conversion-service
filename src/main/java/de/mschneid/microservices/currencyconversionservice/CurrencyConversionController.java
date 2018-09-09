@@ -1,5 +1,6 @@
 package de.mschneid.microservices.currencyconversionservice;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 public class CurrencyConversionController {
 
@@ -39,6 +41,8 @@ public class CurrencyConversionController {
                                                   @PathVariable BigDecimal quantity) {
 
         CurrencyConversionBean response = proxy.retrieveExchangeValue(from, to);
+
+        log.info("{}", response);
 
         return new CurrencyConversionBean(response.getId(), from, to, response.getConversionMultiple(),
                 quantity, quantity.multiply(response.getConversionMultiple()), response.getPort());

@@ -1,6 +1,9 @@
 package de.mschneid.microservices.currencyconversionservice;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +18,12 @@ import java.util.Map;
 @Slf4j
 @RestController
 public class CurrencyConversionController {
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private DirectExchange directExchange;
 
     @Autowired
     private CurrencyExchangeServiceProxy proxy;
@@ -43,8 +52,17 @@ public class CurrencyConversionController {
         CurrencyConversionBean response = proxy.retrieveExchangeValue(from, to);
 
         log.info("{}", response);
+        sendMessagePerRabbitMq();
 
         return new CurrencyConversionBean(response.getId(), from, to, response.getConversionMultiple(),
                 quantity, quantity.multiply(response.getConversionMultiple()), response.getPort());
+    }
+
+    public void sendMessagePerRabbitMq() {
+        log.info("sendMessagePerRabbitMq");
+
+        RabbitTestMessage message = RabbitTestMessage.builder().id(1).firstName("Max").lastName("Mustermann").build();
+        rabbitTemplate.convertAndSend(directExchange.getName(), "currencyRoute", message);
+
     }
 }
